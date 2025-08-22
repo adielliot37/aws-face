@@ -1,0 +1,134 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fix AWS Amplify FaceLivenessDetector styling issues */
+
+/* Main container */
+[data-amplify-liveness],
+.amplify-liveness,
+.amplify-liveness-detector {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  max-width: 400px !important;
+  margin: 0 auto !important;
+}
+
+/* Video element */
+[data-amplify-liveness] video,
+.amplify-liveness video,
+.amplify-liveness-detector video {
+  width: 100% !important;
+  max-width: 350px !important;
+  height: auto !important;
+  aspect-ratio: 4/3 !important;
+  border-radius: 12px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  object-fit: cover !important;
+}
+
+/* Canvas overlay */
+[data-amplify-liveness] canvas,
+.amplify-liveness canvas,
+.amplify-liveness-detector canvas {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+/* Fix the oval overlay positioning - try multiple selectors */
+[data-amplify-liveness] [data-amplify-liveness-overlay],
+[data-amplify-liveness] .amplify-liveness-overlay,
+.amplify-liveness [data-amplify-liveness-overlay],
+.amplify-liveness .amplify-liveness-overlay,
+.amplify-liveness-detector [data-amplify-liveness-overlay],
+.amplify-liveness-detector .amplify-liveness-overlay,
+[data-amplify-liveness] svg,
+.amplify-liveness svg,
+.amplify-liveness-detector svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+  width: 180px !important;
+  height: 220px !important;
+}
+
+/* Hide duplicate instructions from Amplify component */
+[data-amplify-liveness] [data-amplify-liveness-instructions],
+.amplify-liveness-detector [data-amplify-liveness-instructions],
+[data-amplify-liveness] .amplify-text,
+.amplify-liveness-detector .amplify-text {
+  display: none !important;
+}
+
+/* Ensure the liveness detector container has proper positioning */
+[data-amplify-liveness] > div,
+.amplify-liveness > div,
+.amplify-liveness-detector > div {
+  position: relative !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+/* Additional fallback for any oval/circle elements */
+[data-amplify-liveness] ellipse,
+[data-amplify-liveness] circle,
+.amplify-liveness ellipse,
+.amplify-liveness circle,
+.amplify-liveness-detector ellipse,
+.amplify-liveness-detector circle {
+  z-index: 15 !important;
+}
+
+/* Force proper stacking context */
+[data-amplify-liveness],
+.amplify-liveness,
+.amplify-liveness-detector {
+  isolation: isolate !important;
+}
