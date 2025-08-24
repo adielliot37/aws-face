@@ -2,11 +2,11 @@
   "version": "1",
   "cognitoConfig": {
     "identityPoolName": "facelivenessfrontend5718281e_identitypool_5718281e",
-    "allowUnauthenticatedIdentities": false,
+    "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "faceli5718281e",
     "userPoolName": "facelivenessfrontend5718281e_userpool_5718281e",
     "autoVerifiedAttributes": [
-      "email"
+      "phone_number"
     ],
     "mfaConfiguration": "OFF",
     "mfaTypes": [
@@ -26,10 +26,12 @@
     "userpoolClientGenerateSecret": false,
     "userpoolClientRefreshTokenValidity": 30,
     "userpoolClientWriteAttributes": [
-      "email"
+      "email",
+      "phone_number"
     ],
     "userpoolClientReadAttributes": [
-      "email"
+      "email",
+      "phone_number"
     ],
     "userpoolClientLambdaRole": "faceli5718281e_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,

@@ -3,6 +3,7 @@ export type AmplifyDependentResourcesAttributes = {
     "facelivenessfrontend5718281e": {
       "AppClientID": "string",
       "AppClientIDWeb": "string",
+      "CreatedSNSRole": "string",
       "IdentityPoolId": "string",
       "IdentityPoolName": "string",
       "UserPoolArn": "string",

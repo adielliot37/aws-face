@@ -7,7 +7,6 @@ const databaseService = require('../services/databaseService');
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Create liveness session
 router.post('/liveness/create-session', async (req, res) => {
     try {
         const sessionId = await livenessService.createLivenessSession();
@@ -18,7 +17,7 @@ router.post('/liveness/create-session', async (req, res) => {
     }
 });
 
-// Debug endpoint to check liveness results structure
+
 router.post('/liveness/debug-results', async (req, res) => {
     try {
         const { sessionId } = req.body;
