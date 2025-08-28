@@ -47,6 +47,11 @@ async def process_results(body: ProcessResultsReq, phone: str = Depends(get_curr
 
     search = await search_existing_face(img)
     if search["found"]:
+        # Check if this face is already registered to a different phone number
+        existing_user = await database.users.find_one({"rekognition_face_id": search["rekognition_face_id"]})
+        if existing_user and existing_user.get("phone") != phone:
+            raise HTTPException(status_code=409, detail="This face is already registered to another account")
+        
         uid = user.get("uid") if user else search["rekognition_face_id"]
         await database.users.update_one(
             {"phone": phone},

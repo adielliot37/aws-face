@@ -19,8 +19,7 @@ class Settings(BaseModel):
     TWILIO_VERIFY_SERVICE_SID: str = os.getenv("TWILIO_VERIFY_SERVICE_SID", "")
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
     JWT_ROLLING: bool = bool(int(os.getenv("JWT_ROLLING", "1")))  # 1=on, 0=off
-    # If remaining lifetime is <= this threshold, mint a fresh 120-min token.
-    # Set equal to JWT_EXPIRE_MINUTES to refresh on every request 
+  
     JWT_ROLLING_THRESHOLD_MINUTES: int = int(os.getenv("JWT_ROLLING_THRESHOLD_MINUTES", "120"))
 
 settings = Settings()
