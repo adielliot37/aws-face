@@ -24,10 +24,12 @@ async def search_existing_face(image_bytes: bytes):
 async def register_new_face(image_bytes: bytes):
     face_id = str(uuid4())
     s3_key = f"faces/{face_id}.jpg"
-    # store image
+
     if settings.S3_BUCKET_NAME:
         s3.put_object(Bucket=settings.S3_BUCKET_NAME, Key=s3_key, Body=image_bytes, ContentType="image/jpeg")
-    # index
+    else:
+        print(f"⚠️  S3_BUCKET_NAME not set - face image not uploaded to S3: {s3_key}")
+
     idx = rekognition.index_faces(
         CollectionId=settings.REKOG_COLLECTION_ID,
         Image={"Bytes": image_bytes},

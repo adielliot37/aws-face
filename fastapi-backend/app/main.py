@@ -2,8 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import auth, liveness, users
 from .core.config import settings
+from .services.background_jobs import start_background_jobs
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Face Liveness API")
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background jobs when the application starts"""
+    logger.info("Starting background jobs...")
+    # Start background jobs in a separate task
+    asyncio.create_task(start_background_jobs())
 
 origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 allow_credentials = not (len(origins) == 1 and origins[0] == "*")

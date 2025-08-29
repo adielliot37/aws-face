@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-const api = axios.create({ baseURL: 'http://localhost:3001' }); // FastAPI port
+const api = axios.create({ baseURL: 'http://localhost:3001' }); // FastAPI backend port
 
 // Attach JWT on every request
 api.interceptors.request.use((config) => {

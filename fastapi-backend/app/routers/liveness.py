@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Response
-from ..schemas.models import CreateSessionRes, ProcessResultsReq, LivenessProcessRes
+from ..schemas.models import CreateSessionRes, ProcessResultsReq, LivenessProcessRes, PendingRegistration
 from ..services.liveness import create_liveness_session, get_liveness_results, download_from_s3
 from ..services.face_registry import search_existing_face, register_new_face
+from ..services.face_matching import generate_face_embeddings, enqueue_face_matching_job
 from ..db.mongo import db
 from ..core.jwt import decode_jwt, maybe_issue_rolling_token
 from datetime import datetime
@@ -52,30 +53,52 @@ async def process_results(body: ProcessResultsReq, phone: str = Depends(get_curr
         if existing_user and existing_user.get("phone") != phone:
             raise HTTPException(status_code=409, detail="This face is already registered to another account")
         
-        uid = user.get("uid") if user else search["rekognition_face_id"]
-        await database.users.update_one(
-            {"phone": phone},
-            {"$set": {
-                "uid": uid,
+       
+        try:
+            vector_embeddings = await generate_face_embeddings(search["rekognition_face_id"])
+            job_id = await enqueue_face_matching_job(phone, vector_embeddings)
+            
+            # Store in pending with job_id for background processing
+            pending_data = {
+                "phone": phone,
+                "uid": search["rekognition_face_id"],
                 "rekognition_face_id": search["rekognition_face_id"],
                 "liveness_score": results["confidence"],
-                "last_seen": datetime.utcnow()
-            }, "$inc": {"access_count": 1}},
-            upsert=True,
-        )
-        return LivenessProcessRes(success=True, isNewFace=False, uid=uid, confidence=search.get("similarity"), livenessScore=results["confidence"])
+                "status": "pending",
+                "job_id": job_id,
+                "created_at": datetime.utcnow(),
+                "vector_embeddings": vector_embeddings
+            }
+            await database.pending_registrations.insert_one(pending_data)
+            return LivenessProcessRes(success=False, isNewFace=None, uid=None, confidence=search.get("similarity"), livenessScore=results["confidence"])
+                
+        except Exception as e:
+            print(f"Error in face matching process: {str(e)}")
+            return LivenessProcessRes(success=False, isNewFace=None, uid=None, confidence=search.get("similarity"), livenessScore=results["confidence"])
+
 
     reg = await register_new_face(img)
-    await database.users.update_one(
-        {"phone": phone},
-        {"$set": {
+    
+
+    try:
+        vector_embeddings = await generate_face_embeddings(reg["rekognition_face_id"])
+        job_id = await enqueue_face_matching_job(phone, vector_embeddings)
+        
+        # Store in pending with job_id for background processing
+        pending_data = {
+            "phone": phone,
             "uid": reg["face_id"],
             "rekognition_face_id": reg["rekognition_face_id"],
             "s3_key": reg.get("s3_key"),
             "liveness_score": results["confidence"],
-            "created_at": user.get("created_at") if user else datetime.utcnow(),
-            "last_seen": datetime.utcnow()
-        }, "$inc": {"access_count": 1}},
-        upsert=True,
-    )
-    return LivenessProcessRes(success=True, isNewFace=True, uid=reg["face_id"], livenessScore=results["confidence"])
+            "status": "pending",
+            "job_id": job_id,
+            "created_at": datetime.utcnow(),
+            "vector_embeddings": vector_embeddings
+        }
+        await database.pending_registrations.insert_one(pending_data)
+        return LivenessProcessRes(success=False, isNewFace=True, uid=None, livenessScore=results["confidence"])
+            
+    except Exception as e:
+        print(f"Error in face matching process for new face: {str(e)}")
+        return LivenessProcessRes(success=False, isNewFace=True, uid=None, livenessScore=results["confidence"])

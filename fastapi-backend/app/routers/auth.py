@@ -9,7 +9,41 @@ router = APIRouter()
 
 @router.post("/start-otp")
 async def start_otp(payload: OTPStartReq):
-    # normalize phone to E.164 on frontend ideally; trust for now
+    database = db()
+    
+    # Check if user already exists in main users collection
+    existing_user = await database.users.find_one({"phone": payload.phone})
+    
+    # Check if user exists in pending registrations
+    pending_user = await database.pending_registrations.find_one({"phone": payload.phone})
+    
+    # If user doesn't exist anywhere, verify invite code (new user)
+    if not existing_user and not pending_user:
+        invite_code_doc = await database.invite_codes.find_one({"code": payload.invite_code})
+        if not invite_code_doc:
+            raise HTTPException(status_code=400, detail="Invalid invite code")
+    
+    # Send OTP regardless of user status
+    await twilio_verify.start_verify(payload.phone)
+    return {"ok": True}
+
+@router.post("/resend-otp")
+async def resend_otp(payload: OTPStartReq):
+    database = db()
+    
+    # Check if user already exists in main users collection
+    existing_user = await database.users.find_one({"phone": payload.phone})
+    
+    # Check if user exists in pending registrations  
+    pending_user = await database.pending_registrations.find_one({"phone": payload.phone})
+    
+    # If user doesn't exist anywhere, verify invite code (new user)
+    if not existing_user and not pending_user:
+        invite_code_doc = await database.invite_codes.find_one({"code": payload.invite_code})
+        if not invite_code_doc:
+            raise HTTPException(status_code=400, detail="Invalid invite code")
+    
+    # Resend OTP regardless of user status
     await twilio_verify.start_verify(payload.phone)
     return {"ok": True}
 
@@ -24,9 +58,10 @@ async def verify_otp(payload: OTPVerifyReq):
     if not existing:
         await database.users.insert_one({
             "phone": payload.phone,
+            "status": "new",
             "created_at": datetime.utcnow(),
             "last_seen": datetime.utcnow(),
             "access_count": 0,
         })
     token = create_jwt(sub=payload.phone)
-    return TokenRes(access_token=token, expires_in=60*2*60)  # seconds
+    return TokenRes(access_token=token, expires_in=60*2*60) 
